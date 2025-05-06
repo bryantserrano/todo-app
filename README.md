@@ -1,6 +1,6 @@
 ## Overview
 
-This project is a full-stack Todo application with a **Frontend** and **Backend**. The backend uses **FastAPI** and connects to **MongoDB** for data storage, while the frontend is built with **React** and **Vite**.
+This project is a full-stack Todo application with a **Backend** and **Frontend**. The backend uses **FastAPI** and connects to **MongoDB** for data storage, while the frontend is built with **React** and **Vite**.
 
 ## Backend
 
@@ -16,4 +16,7 @@ The backend is responsible for handling the API requests and interacting with th
    ```
 
 For example:
+
+```bash
 MONGO_URI=mongodb://localhost:27017
+```
