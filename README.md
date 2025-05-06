@@ -1,2 +1,19 @@
-# todo-app
-A full-stack To-Do list application built with FastAPI, MongoDB, React, and Tailwind CSS. Demonstrates clean API design, frontend state management, and persistent storage.
+## Overview
+
+This project is a full-stack Todo application with a **Frontend** and **Backend**. The backend uses **FastAPI** and connects to **MongoDB** for data storage, while the frontend is built with **React** and **Vite**.
+
+## Backend
+
+The backend is responsible for handling the API requests and interacting with the MongoDB database.
+
+### Setup
+
+1. Create a `.env` file in the root of the **backend** folder.
+2. Add the following line to your `.env` file:
+
+   ```bash
+   MONGO_URI=your_mongodb_connection_string
+   ```
+
+For example:
+MONGO_URI=mongodb://localhost:27017
