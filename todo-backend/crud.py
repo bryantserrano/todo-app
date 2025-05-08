@@ -26,6 +26,16 @@ def get_tasks():
         logger.exception(f"Error retrieving tasks: {e}")
         raise HTTPException(status_code=500, detail="Error retrieving tasks")
 
+def get_task_by_id(task_id: str):
+    try:
+        task = tasks_collection.find_one({"_id": ObjectId(task_id)})
+        if task:
+            task["_id"] = str(task["_id"])
+            return task
+        return None
+    except Exception as e:
+        logger.exception(f"Invalid task ID. Error: {e}")
+        raise
 
 def update_task(task_id: str, updated: Task):
     try:
