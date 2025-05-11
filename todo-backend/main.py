@@ -1,6 +1,12 @@
 from fastapi import FastAPI, HTTPException
 from models import Task
-from crud import create_task, get_tasks, get_task_by_id, update_task, delete_task
+from crud import (
+    create_task,
+    get_tasks,
+    get_task_by_id,
+    update_task,
+    delete_task
+)
 from logging_config import logger
 
 app = FastAPI()
@@ -52,7 +58,7 @@ def update(task_id: str, task: Task):
         return {"updated": count}
     except Exception as e:
         logger.exception("Error updating task")
-        raise HTTPException(status_code=500, detail="Failed to update task")
+        raise HTTPException(status_code=500, detail="Failed to update task. Error: {e}")
 
 
 @app.delete("/tasks/{task_id}")
@@ -64,4 +70,4 @@ def delete(task_id: str):
         return {"deleted": count}
     except Exception as e:
         logger.exception("Error deleting task")
-        raise HTTPException(status_code=500, detail="Failed to delete task")
+        raise HTTPException(status_code=500, detail="Failed to delete task. Error: {e}")
