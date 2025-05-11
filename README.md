@@ -22,3 +22,13 @@ For example:
 MONGO_URI=mongodb://localhost:27017
 ENVIRONMENT=development
 ```
+
+### Running the Backend in Development
+
+To start the **FastAPI** backend with auto-reload (recommended for development), run the following command from the backend directory:
+
+```bash
+uvicorn main:app --reload
+```
+
+Make sure your virtual environment is activated and that all dependencies are installed (see `requirements.txt`).
