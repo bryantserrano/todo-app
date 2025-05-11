@@ -5,6 +5,7 @@ from logging_config import logger
 
 app = FastAPI()
 
+
 @app.post("/tasks")
 def create(task: Task):
     try:
@@ -14,6 +15,7 @@ def create(task: Task):
         logger.exception("Error creating task")
         raise HTTPException(status_code=500, detail="Failed to create task")
 
+
 @app.get("/tasks")
 def read():
     try:
@@ -21,6 +23,7 @@ def read():
     except Exception as e:
         logger.exception("MongoDB error in /tasks endpoint")
         raise HTTPException(status_code=500, detail="MongoDB connection failed")
+
 
 @app.get("/tasks/{task_id}")
 def read_task(task_id: str):
@@ -32,17 +35,21 @@ def read_task(task_id: str):
     except Exception:
         logger.exception("Error fetching specific task")
         raise HTTPException(status_code=500, detail="Failed to fetch task")
-    
+
+
 @app.put("/tasks/{task_id}")
 def update(task_id: str, task: Task):
     try:
         count = update_task(task_id, task)
         if count == 0:
-            raise HTTPException(status_code=404, detail="Task not found or no change made")
+            raise HTTPException(
+                status_code=404, detail="Task not found or no change made"
+            )
         return {"updated": count}
     except Exception as e:
         logger.exception("Error updating task")
         raise HTTPException(status_code=500, detail="Failed to update task")
+
 
 @app.delete("/tasks/{task_id}")
 def delete(task_id: str):
