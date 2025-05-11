@@ -20,3 +20,4 @@ except errors.ConfigurationError as e:
 # Handle other errors
 except Exception as e:
     logger.error(f"An unexpected error occurred: {e}")
+    
