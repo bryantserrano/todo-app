@@ -5,10 +5,15 @@ from fastapi import HTTPException
 from logging_config import logger
 from pymongo.errors import PyMongoError
 
+
 def create_task(task: Task):
     try:
-        if tasks_collection.find_one({"title": {"$regex": f"^{task.title}$", "$options": "i"}}):
-            raise HTTPException(status_code=400, detail="Task with same title already exists.")
+        if tasks_collection.find_one(
+            {"title": {"$regex": f"^{task.title}$", "$options": "i"}}
+        ):
+            raise HTTPException(
+                status_code=400, detail="Task with same title already exists."
+            )
         result = tasks_collection.insert_one(task.model_dump())
         logger.info(f"Task created with ID: {result.inserted_id}")
         return str(result.inserted_id)
@@ -26,6 +31,7 @@ def get_tasks():
         logger.exception(f"Error retrieving tasks: {e}")
         raise HTTPException(status_code=500, detail="Error retrieving tasks")
 
+
 def get_task_by_id(task_id: str):
     try:
         task = tasks_collection.find_one({"_id": ObjectId(task_id)})
@@ -37,11 +43,11 @@ def get_task_by_id(task_id: str):
         logger.exception(f"Invalid task ID. Error: {e}")
         raise
 
+
 def update_task(task_id: str, updated: Task):
     try:
         result = tasks_collection.update_one(
-            {"_id": ObjectId(task_id)},
-            {"$set": updated.model_dump()}
+            {"_id": ObjectId(task_id)}, {"$set": updated.model_dump()}
         )
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail="Task not found")
