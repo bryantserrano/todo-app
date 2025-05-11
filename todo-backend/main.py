@@ -1,12 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from models import Task
-from crud import (
-    create_task,
-    get_tasks,
-    get_task_by_id,
-    update_task,
-    delete_task
-)
+from crud import create_task, get_tasks, get_task_by_id, update_task, delete_task
 from logging_config import logger
 
 app = FastAPI()
@@ -19,8 +13,10 @@ def create(task: Task):
         return {"id": task_id}
     except Exception as e:
         logger.exception("Error creating task")
-        raise HTTPException(status_code=500, 
-                            detail=f"Failed to create task. Error: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to create task. Error: {e}"
+        )
+
 
 @app.get("/tasks")
 def read():
@@ -28,8 +24,9 @@ def read():
         return get_tasks()
     except Exception as e:
         logger.exception("MongoDB error in /tasks endpoint")
-        raise HTTPException(status_code=500, 
-                            detail=f"MongoDB connection failed. Error: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"MongoDB connection failed. Error: {e}"
+        )
 
 
 @app.get("/tasks/{task_id}")

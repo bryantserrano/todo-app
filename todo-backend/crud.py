@@ -24,10 +24,7 @@ def create_task(task: Task):
 
 def get_tasks():
     try:
-        tasks = [
-            {**task, "_id": str(task["_id"])}
-            for task in tasks_collection.find()
-        ]
+        tasks = [{**task, "_id": str(task["_id"])} for task in tasks_collection.find()]
         logger.info(f"Retrieved {len(tasks)} tasks.")
         return tasks
     except PyMongoError as e:
@@ -50,8 +47,7 @@ def get_task_by_id(task_id: str):
 def update_task(task_id: str, updated: Task):
     try:
         result = tasks_collection.update_one(
-            {"_id": ObjectId(task_id)}, 
-            {"$set": updated.model_dump()}
+            {"_id": ObjectId(task_id)}, {"$set": updated.model_dump()}
         )
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail="Task not found")

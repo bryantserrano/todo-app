@@ -18,10 +18,7 @@ LEVEL = {
 logging.basicConfig(
     level=LEVEL,
     format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler("logs/backend.log"), 
-        logging.StreamHandler()
-        ]
+    handlers=[logging.FileHandler("logs/backend.log"), logging.StreamHandler()],
 )
 
 logger = logging.getLogger(__name__)
