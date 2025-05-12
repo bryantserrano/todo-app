@@ -11,6 +11,9 @@ from logging_config import logger
 
 app = FastAPI()
 
+@app.get("/")
+def root():
+    return {"message": "Todo API is running"}
 
 @app.post("/tasks")
 def create(task: Task):
