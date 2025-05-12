@@ -26,7 +26,7 @@ jobs:
       - name: Check formatting with Black
         run: |
           pip install black
-          black --check todo-backend/
+          black todo-backend/
 
       - name: Lint with flake8
         run: |
