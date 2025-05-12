@@ -10,6 +10,17 @@ jobs:
   backend-ci:
     runs-on: ubuntu-latest
 
+    services:
+      mongo:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd="mongosh --eval 'db.runCommand(\"ping\").ok'" 
+          --health-interval=10s 
+          --health-timeout=5s 
+          --health-retries=5
+
     steps:
       - uses: actions/checkout@v3
 
@@ -28,7 +39,11 @@ jobs:
           pip install flake8
           flake8 . || true
 
-      - name: Run tests (optional if no tests yet)
+      - name: Wait for MongoDB to be ready
         run: |
-          pip install pytest
-          pytest || echo "No tests yet"
+          until mongosh --host localhost --eval "db.adminCommand('ping')"; do
+            echo "Waiting for MongoDB..."
+            sleep 2
+          done
+      - name: Run tests (optional if no tests yet)
+        run: pytest || echo "No tests yet"
