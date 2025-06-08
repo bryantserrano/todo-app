@@ -18,7 +18,9 @@ function App() {
 
   return (
     <div className="max-w-xl mx-auto mt-10">
-      <h1 className="text-4xl font-bold mb-6 text-center text-blue-600">Todo App</h1>
+      <div className="justify-center w-full mb-4">
+        <h1 className="text-2xl font-bold text-center">Todo App</h1>
+      </div>
       <TodoForm onAdd={loadTodos} />
       <TodoList todos={todos} refresh={loadTodos} />
     </div>
