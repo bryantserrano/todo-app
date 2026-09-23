@@ -1,0 +1,21 @@
+README.md
+  s_cb2ed32755aca5::t_f965f3710087ac 26-69
+AGENTS.md
+  s_cb2ed32755aca5::t_06cd7466655c19 1-161
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "153f59d515f2caa148557d0fd73d473f45b490b7",
+  "prompts": {},
+  "sessions": {
+    "s_cb2ed32755aca5": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "41e29d19-2848-4668-9f10-7fd34688c8ef",
+        "model": "claude-haiku-4.5"
+      },
+      "human_author": "Bryant Serrano <bryserra@cisco.com>"
+    }
+  }
+}
