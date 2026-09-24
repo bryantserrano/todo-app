@@ -1,0 +1,29 @@
+todo-frontend/src/index.css
+  s_cb2ed32755aca5::t_a6170524dcd679 1-4,9,12
+todo-frontend/src/App.css
+  s_cb2ed32755aca5::t_7a22732bf361a7 2-4
+todo-frontend/postcss.config.js
+  s_cb2ed32755aca5::t_9a83291e477065 3
+  s_cb2ed32755aca5::t_3b5905f6d63514 1-2
+  s_cb2ed32755aca5::t_8fda36c891b78d 4-5
+todo-frontend/package.json
+  s_cb2ed32755aca5::t_20b007de7ea570 20
+todo-frontend/tailwind.config.ts
+  s_cb2ed32755aca5::t_57d630db29d886 1-14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "41b3ce382700cc16930d3b0cedd37ad7ef352b8e",
+  "prompts": {},
+  "sessions": {
+    "s_cb2ed32755aca5": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "41e29d19-2848-4668-9f10-7fd34688c8ef",
+        "model": "claude-haiku-4.5"
+      },
+      "human_author": "Bryant Serrano <bryantser96@gmail.com>"
+    }
+  }
+}
