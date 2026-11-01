@@ -1,0 +1,56 @@
+- main [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - paragraph [ref=e7]:
+        - generic [aria-hidden] [ref=e8]: ✳
+        - text: A LITTLE MORE FOCUS
+      - button "Light mode" [ref=e9] [cursor=pointer]:
+        - generic [aria-hidden] [ref=e10]: ☀
+        - text: Light mode
+    - heading "One thing at a time." [level=1] [ref=e11]
+    - paragraph [ref=e12]: A calmer place to gather your tasks and make steady progress.
+  - region [ref=e13]:
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - paragraph [ref=e16]: YOUR LIST
+        - heading "Today" [level=2] [ref=e17]
+      - generic [ref=e18]: 3 open
+    - generic [ref=e20]:
+      - generic [ref=e21]: New task
+      - textbox "New task" [ref=e22]:
+        - /placeholder: What needs to be done?
+      - button "Add task" [disabled] [ref=e23]:
+        - generic [aria-hidden] [ref=e24]: +
+        - text: Add task
+      - paragraph [ref=e25]: Enter a task title to enable Add.
+    - generic [ref=e42]:
+      - group "Filter tasks" [ref=e43]:
+        - button "All 3" [pressed] [ref=e64] [cursor=pointer]:
+          - text: All
+          - generic [ref=e45]: "3"
+        - button "Active 3" [ref=e65] [cursor=pointer]:
+          - text: Active
+          - generic [ref=e47]: "3"
+        - button "Completed 0" [ref=e48] [cursor=pointer]:
+          - text: Completed
+          - generic [ref=e49]: "0"
+      - paragraph [ref=e50]: 3 tasks left
+    - list "Tasks" [ref=e51]:
+      - listitem [ref=e66]:
+        - button "Complete Take a short walk" [ref=e67] [cursor=pointer]
+        - generic [ref=e68]: Take a short walk
+        - button "Delete Take a short walk" [ref=e69] [cursor=pointer]:
+          - generic [aria-hidden] [ref=e70]: ×
+      - listitem [ref=e59]:
+        - button "Complete Reply to important emails" [ref=e60] [cursor=pointer]
+        - generic [ref=e61]: Reply to important emails
+        - button "Delete Reply to important emails" [ref=e62] [cursor=pointer]:
+          - generic [aria-hidden] [ref=e63]: ×
+      - listitem [ref=e52]:
+        - button "Complete Plan the week" [ref=e53] [cursor=pointer]
+        - generic [ref=e54]: Plan the week
+        - button "Delete Plan the week" [ref=e55] [cursor=pointer]:
+          - generic [aria-hidden] [ref=e56]: ×
+  - generic [ref=e39]:
+    - generic [ref=e40]: Small steps still move you forward.
+    - generic [aria-hidden] [ref=e41]: ✦

@@ -32,8 +32,12 @@ together. Install Docker Desktop (or Docker Engine with the Compose plugin),
 then run these commands from the repository root:
 
 ```bash
-docker compose up --build
+docker compose up --build --detach
 ```
+
+Detached mode keeps the service output out of your terminal. To view logs later,
+run `docker compose logs --follow`; use `docker compose logs --follow backend`
+to follow only the backend. Stop the stack with `docker compose down`.
 
 Open the frontend at `http://localhost:5173`, the backend health endpoint at
 `http://localhost:8000/`, and the API docs at `http://localhost:8000/docs`.
@@ -43,9 +47,8 @@ The backend connects to MongoDB through the Compose network at
 
 The backend and frontend source directories are mounted into their containers,
 so code changes reload during development. MongoDB data is kept in the named
-`mongodb-data` volume across restarts. Stop the services with `Ctrl+C`, or run
-`docker compose down`. To also delete the database volume and its data, run
-`docker compose down --volumes`.
+`mongodb-data` volume across restarts. To also delete the database volume and
+its data, run `docker compose down --volumes`.
 
 The web frontend currently stores todos in browser local storage and does not
 call the FastAPI API. Compose runs the backend and database so they are ready
@@ -160,6 +163,33 @@ npm run dev
 ```
 
 Open the URL printed by Vite, usually `http://localhost:5173/`.
+
+### Running the web and API smoke tests
+
+The Playwright suite checks the browser task flow (add, complete, filter,
+delete, and persistence after reload) and the FastAPI health and task CRUD
+endpoints. The web app currently saves tasks in browser local storage, so the
+UI checks and API checks exercise separate storage paths.
+
+Start the full stack first so MongoDB and the API are available:
+
+```bash
+docker compose up --build --detach
+```
+
+Then install the frontend dependencies and run the checks:
+
+```bash
+cd todo-frontend
+npm install
+npx playwright install chromium  # First time only
+npm run test:e2e
+```
+
+The API checks create uniquely named test data and delete it when finished.
+Override the default service URLs with `PLAYWRIGHT_BASE_URL` and
+`PLAYWRIGHT_API_URL` when needed. Use `npm run test:e2e:ui` to run Playwright
+in interactive mode.
 
 ### Hosting the standalone web app on GitHub Pages
 
