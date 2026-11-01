@@ -25,6 +25,39 @@ ENVIRONMENT=development
 
 ### MongoDB Setup & Verification
 
+#### Run the full development stack with Docker Compose (Recommended)
+
+Docker Compose starts MongoDB, the FastAPI backend, and the Vite frontend
+together. Install Docker Desktop (or Docker Engine with the Compose plugin),
+then run these commands from the repository root:
+
+```bash
+docker compose up --build
+```
+
+Open the frontend at `http://localhost:5173`, the backend health endpoint at
+`http://localhost:8000/`, and the API docs at `http://localhost:8000/docs`.
+The backend connects to MongoDB through the Compose network at
+`mongodb://mongodb:27017`; from your host machine, MongoDB is available at
+`mongodb://localhost:27017`.
+
+The backend and frontend source directories are mounted into their containers,
+so code changes reload during development. MongoDB data is kept in the named
+`mongodb-data` volume across restarts. Stop the services with `Ctrl+C`, or run
+`docker compose down`. To also delete the database volume and its data, run
+`docker compose down --volumes`.
+
+The web frontend currently stores todos in browser local storage and does not
+call the FastAPI API. Compose runs the backend and database so they are ready
+for API development, but existing web app tasks remain browser-local.
+
+If you already started MongoDB with the standalone `docker run` command below,
+stop that container before starting Compose because both use port `27017`:
+
+```bash
+docker stop mongodb
+```
+
 Before running the backend, ensure MongoDB is running. Here are the recommended ways:
 
 #### Option 1: Docker (Recommended)
