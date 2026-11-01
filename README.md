@@ -51,6 +51,26 @@ The web frontend currently stores todos in browser local storage and does not
 call the FastAPI API. Compose runs the backend and database so they are ready
 for API development, but existing web app tasks remain browser-local.
 
+```mermaid
+flowchart LR
+  browser[Your browser] -->|localhost:5173| frontend[Frontend\nReact + Vite]
+  browser -->|localhost:8000| backend[Backend\nFastAPI]
+
+  subgraph compose[Docker Compose network]
+    frontend
+    backend -->|mongodb:27017| mongodb[(MongoDB)]
+  end
+
+  backend -. port 8000 .-> browser
+  frontend -. port 5173 .-> browser
+  mongodb -. port 27017 .-> host[Your machine]
+  mongodb --- volume[(mongodb-data volume)]
+```
+
+The browser uses the frontend for the app and can reach the backend directly
+for API development. The backend reaches MongoDB by the Compose service name
+`mongodb`; MongoDB data lives in the `mongodb-data` volume.
+
 If you already started MongoDB with the standalone `docker run` command below,
 stop that container before starting Compose because both use port `27017`:
 
