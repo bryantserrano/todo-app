@@ -1,6 +1,6 @@
 ## Overview
 
-This project is a full-stack Todo application with a **Backend** and **Frontend**. The backend uses **FastAPI** and connects to **MongoDB** for data storage, while the frontend is built with **React** and **Vite**.
+This project is a Todo application with a **FastAPI** backend, a **React + Vite** web frontend, and an **Expo / React Native** mobile app. The backend connects to **MongoDB** for data storage.
 
 ## Backend
 
@@ -8,12 +8,12 @@ The backend is responsible for handling the API requests and interacting with th
 
 ### Setup
 
-1. Create a `.env` file in the root of the **backend** folder.
+1. Create a `.env` file in the repository root (the same directory as this README).
 2. Add the following environment variables to your `.env` file:
 
    ```bash
    MONGO_URI=your_mongodb_connection_string
-   ENVIRONMENT=development  # Options are: 'development', 'production' or 'testing' this affects logginglevel
+   ENVIRONMENT=development  # Options: development, production, testing; controls log level
    ```
 
 For example:
@@ -69,22 +69,58 @@ brew services stop mongodb-community
 
 ### Running the Backend in Development
 
-Before running the backend server, we need to install dependencies:
+Install `uv` if needed:
 
-First, we can install `uv` with:
 ```shell
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-Then, install dependencies from `/todo-backend/requirements.txt` file.
-```shell
-% uv pip install -r requirements.txt
+From the repository root, create a virtual environment and install the backend dependencies:
+
+```bash
+cd todo-backend
+uv venv
+uv pip install --python .venv/bin/python -r requirements.txt
 ```
 
 To start the **FastAPI** backend with auto-reload (recommended for development), run the following command from the backend directory:
 
 ```bash
-uvicorn main:app --reload
+.venv/bin/python -m uvicorn main:app --reload
 ```
 
-Make sure your virtual environment is activated and that all dependencies are installed (see `requirements.txt`).
+The API will be available at `http://localhost:8000`. Visit `http://localhost:8000/` for the health check.
+
+### Running the Frontend in Development
+
+Use a supported Node.js LTS release. From the repository root, install the web frontend dependencies:
+
+```bash
+cd todo-frontend
+npm install
+```
+
+Then run the UI:
+
+```bash
+npm run dev
+```
+
+Open the URL printed by Vite, usually `http://localhost:5173/`.
+
+### Running the Mobile App in Development
+
+Install dependencies from the repository root:
+
+```bash
+cd todo-mobile
+npm install
+```
+
+Start Expo:
+
+```bash
+npm run start
+```
+
+Use the Expo CLI prompts to open the app in an available simulator or on a device with Expo Go. You can also run `npm run ios`, `npm run android`, or `npm run web` when the corresponding platform is available.
