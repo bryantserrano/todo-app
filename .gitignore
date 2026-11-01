@@ -23,3 +23,6 @@ yarn-error.log*
 
 # === VSCode ===
 .vscode/
+
+# === Agent Skills (generated) ===
+.agents/skills/
