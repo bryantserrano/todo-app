@@ -5,8 +5,30 @@ import { deleteTodo, getTodos, updateTodo } from './services/api';
 import type { Todo } from './types/todo';
 
 type TodoFilter = 'all' | 'active' | 'completed';
+type Theme = 'light' | 'dark';
+type ThemePreference = { theme: Theme; isExplicit: boolean };
+
+const THEME_STORAGE_KEY = 'todo-app-theme';
+
+function getSystemTheme(): Theme {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function getInitialThemePreference(): ThemePreference {
+  try {
+    const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+      return { theme: savedTheme, isExplicit: true };
+    }
+  } catch {
+    // Storage may be unavailable; use the device preference for this session.
+  }
+
+  return { theme: getSystemTheme(), isExplicit: false };
+}
 
 function App() {
+  const [themePreference, setThemePreference] = useState<ThemePreference>(getInitialThemePreference);
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -60,9 +82,37 @@ function App() {
     }
   };
 
+  const toggleTheme = () => {
+    const theme: Theme = themePreference.theme === 'dark' ? 'light' : 'dark';
+
+    try {
+      window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+    } catch {
+      // Keep the selected theme for this session if storage is unavailable.
+    }
+
+    setThemePreference({ theme, isExplicit: true });
+  };
+
   useEffect(() => {
     void loadTodos();
   }, [loadTodos]);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = themePreference.theme;
+  }, [themePreference.theme]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const syncSystemTheme = (event: MediaQueryListEvent) => {
+      setThemePreference(current => current.isExplicit
+        ? current
+        : { theme: event.matches ? 'dark' : 'light', isExplicit: false });
+    };
+
+    mediaQuery.addEventListener('change', syncSystemTheme);
+    return () => mediaQuery.removeEventListener('change', syncSystemTheme);
+  }, []);
 
   const activeCount = todos.filter(todo => !todo.completed).length;
   const completedCount = todos.length - activeCount;
@@ -78,13 +128,31 @@ function App() {
       : filter === 'completed'
         ? 'No completed tasks yet. Keep going!'
         : 'Nothing to show here.';
+  const currentThemeLabel = themePreference.theme === 'dark' ? 'Dark mode' : 'Light mode';
 
   return (
     <div className="app-backdrop">
       <div className="ambient-glow" aria-hidden="true" />
       <main className="app-shell">
         <header className="page-heading">
-          <p className="eyebrow"><span aria-hidden="true">✳</span> A LITTLE MORE FOCUS</p>
+          <div className="heading-topline">
+            <p className="eyebrow"><span aria-hidden="true">✳</span> A LITTLE MORE FOCUS</p>
+            <button
+              type="button"
+              className="theme-toggle"
+              aria-label={currentThemeLabel}
+              aria-pressed={themePreference.theme === 'dark'}
+              onClick={toggleTheme}
+            >
+              <span
+                className={`theme-toggle-icon ${themePreference.theme === 'dark' ? 'is-moon' : 'is-sun'}`}
+                aria-hidden="true"
+              >
+                {themePreference.theme === 'dark' ? '☾' : '☀'}
+              </span>
+              {currentThemeLabel}
+            </button>
+          </div>
           <h1>One thing at a <span>time.</span></h1>
           <p className="page-intro">A calmer place to gather your tasks and make steady progress.</p>
         </header>
