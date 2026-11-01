@@ -5,6 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f4f5f3" />
     <meta name="description" content="A calmer place to gather your tasks and make steady progress." />
+    <script>
+      try {
+        const savedTheme = window.localStorage.getItem('todo-app-theme');
+        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = savedTheme === 'light' || savedTheme === 'dark'
+          ? savedTheme
+          : systemTheme;
+      } catch {
+        // CSS still follows the device preference if browser storage is unavailable.
+      }
+    </script>
     <title>Today — Todo</title>
   </head>
   <body>
