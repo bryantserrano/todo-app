@@ -108,6 +108,22 @@ npm run dev
 
 Open the URL printed by Vite, usually `http://localhost:5173/`.
 
+### Hosting the standalone web app on GitHub Pages
+
+The web frontend stores tasks and the selected theme in the browser's local
+storage, so the static site does not need the FastAPI backend or MongoDB. Data
+is local to each browser and device; it does not sync between them.
+
+The `Deploy static site to GitHub Pages` workflow builds the frontend and
+deploys it whenever changes are pushed to `main`. To enable it:
+
+1. Push the repository to GitHub and open **Settings → Pages**.
+2. Under **Build and deployment**, set the source to **GitHub Actions**.
+3. Push to `main` (or run the workflow manually from the **Actions** tab).
+
+After the workflow succeeds, GitHub shows the published site URL in the Pages
+settings and in the workflow deployment environment.
+
 ### Running the Mobile App in Development
 
 Install dependencies from the repository root:

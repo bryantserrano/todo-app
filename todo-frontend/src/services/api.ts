@@ -1,22 +1,42 @@
-import axios from 'axios';
 import type { Todo, TodoInput } from '../types/todo';
 
-const API_BASE = 'http://localhost:8000/tasks'; // adjust if needed
+const STORAGE_KEY = 'todo-app-tasks';
 
-export const getTodos = async (): Promise<Todo[]> => {
-    const res = await axios.get<Todo[]>(API_BASE);
-    return res.data;
-};
+function readTodos(): Todo[] {
+  const storedTodos = window.localStorage.getItem(STORAGE_KEY);
+  if (!storedTodos) return [];
 
-export const addTodo = async (todo: TodoInput): Promise<{ id: string }> => {
-    const res = await axios.post<{ id: string }>(API_BASE, todo);
-    return res.data;
-};
+  const parsed: unknown = JSON.parse(storedTodos);
+  if (!Array.isArray(parsed)) return [];
 
-export const updateTodo = async (id: string, todo: TodoInput): Promise<void> => {
-  await axios.put(`${API_BASE}/${id}`, todo);
-};
+  return parsed.filter((todo): todo is Todo =>
+    typeof todo === 'object'
+    && todo !== null
+    && typeof todo._id === 'string'
+    && typeof todo.title === 'string'
+    && typeof todo.completed === 'boolean'
+    && (todo.description === undefined || typeof todo.description === 'string'),
+  );
+}
 
-export const deleteTodo = async (id: string): Promise<void> => {
-  await axios.delete(`${API_BASE}/${id}`);
-};
+function writeTodos(todos: Todo[]): void {
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+}
+
+export async function getTodos(): Promise<Todo[]> {
+  return readTodos();
+}
+
+export async function addTodo(todo: TodoInput): Promise<{ id: string }> {
+  const id = crypto.randomUUID();
+  writeTodos([{ ...todo, _id: id }, ...readTodos()]);
+  return { id };
+}
+
+export async function updateTodo(id: string, todo: TodoInput): Promise<void> {
+  writeTodos(readTodos().map(current => current._id === id ? { ...todo, _id: id } : current));
+}
+
+export async function deleteTodo(id: string): Promise<void> {
+  writeTodos(readTodos().filter(todo => todo._id !== id));
+}
