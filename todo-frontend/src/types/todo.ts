@@ -1,5 +1,8 @@
 export interface Todo {
-    _id?: string;      // optional, since new todos won't have one yet
-    title: string;
-    completed: boolean;
-  }
+  _id: string;
+  title: string;
+  description?: string;
+  completed: boolean;
+}
+
+export type TodoInput = Omit<Todo, '_id'>;

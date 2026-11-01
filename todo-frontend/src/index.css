@@ -1,26 +1,46 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #1a1a1a;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #242a35;
+  background: #f4f5f3;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  --color-ink: #242a35;
+  --color-muted: #818a97;
+  --color-line: #e9ece9;
+  --color-accent: #557564;
+  --color-accent-dark: #405f4f;
+  --color-accent-soft: #edf3ee;
+  --color-danger: #a94f4b;
+  --color-danger-soft: #fbefed;
+  --color-panel: #fff;
+  --shadow-panel: 0 26px 80px rgb(36 42 53 / 8%), 0 3px 12px rgb(36 42 53 / 3%);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
-  margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  margin: 0;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
+button,
+input {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+::selection {
+  color: var(--color-ink);
+  background: #dce9de;
 }

@@ -1,37 +1,47 @@
 import type { Todo } from '../types/todo';
-import { deleteTodo } from '../services/api';
 
 interface Props {
   todos: Todo[];
-  refresh: () => void;
+  onToggle: (todo: Todo) => void;
+  onDelete: (todo: Todo) => void;
+  pendingTodoIds: string[];
+  emptyMessage: string;
 }
 
-export default function TodoList({ todos, refresh }: Props) {
+export default function TodoList({ todos, onToggle, onDelete, pendingTodoIds, emptyMessage }: Props) {
   return (
-    <ul className="space-y-2">
+    <ul className="todo-list" aria-label="Tasks">
+      {todos.length === 0 && (
+        <li className="empty-state">
+          <span className="empty-state-icon" aria-hidden="true">✦</span>
+          <p>{emptyMessage}</p>
+        </li>
+      )}
       {todos.map(todo => (
-        <li key={todo._id} className="flex items-center justify-between bg-white px-4 py-2 rounded shadow">
-           <div
-            onClick={async () => {
-              if (todo._id) {
-                await toggleTodo(todo._id);
-                refresh();
-              }
-            }}
-            className={`cursor-pointer ${todo.completed ? 'line-through text-gray-400' : ''}`}
-          >
-            {todo.title}
-          </div> 
+        <li
+          key={todo._id}
+          className={`todo-item${todo.completed ? ' is-completed' : ''}`}
+          aria-busy={pendingTodoIds.includes(todo._id)}
+        >
           <button
-            onClick={async () => {
-              if (todo._id) {
-                await deleteTodo(todo._id);
-                refresh();
-              }
-            }}
-            className="text-red-600"
+            type="button"
+            className="completion-button"
+            aria-label={`${todo.completed ? 'Mark' : 'Complete'} ${todo.title}${todo.completed ? ' as active' : ''}`}
+            aria-pressed={todo.completed}
+            disabled={pendingTodoIds.includes(todo._id)}
+            onClick={() => onToggle(todo)}
           >
-            ✕
+            <span aria-hidden="true">{todo.completed ? '✓' : ''}</span>
+          </button>
+          <span className="todo-title">{todo.title}</span>
+          <button
+            type="button"
+            className="delete-button"
+            aria-label={`Delete ${todo.title}`}
+            disabled={pendingTodoIds.includes(todo._id)}
+            onClick={() => onDelete(todo)}
+          >
+            <span aria-hidden="true">×</span>
           </button>
         </li>
       ))}
