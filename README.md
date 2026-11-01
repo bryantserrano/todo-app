@@ -110,6 +110,8 @@ Open the URL printed by Vite, usually `http://localhost:5173/`.
 
 ### Hosting the standalone web app on GitHub Pages
 
+**Live site:** [https://bryantserrano.github.io/todo-app/](https://bryantserrano.github.io/todo-app/)
+
 The web frontend stores tasks and the selected theme in the browser's local
 storage, so the static site does not need the FastAPI backend or MongoDB. Data
 is local to each browser and device; it does not sync between them.
