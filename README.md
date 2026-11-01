@@ -69,6 +69,18 @@ brew services stop mongodb-community
 
 ### Running the Backend in Development
 
+Before running the backend server, we need to install dependencies:
+
+First, we can install `uv` with:
+```shell
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Then, install dependencies from `/todo-backend/requirements.txt` file.
+```shell
+% uv pip install -r requirements.txt
+```
+
 To start the **FastAPI** backend with auto-reload (recommended for development), run the following command from the backend directory:
 
 ```bash
