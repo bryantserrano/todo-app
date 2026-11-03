@@ -21,8 +21,8 @@ export default function TodoForm({ onAdd }: Props) {
       await addTodo({ title: trimmedTitle, completed: false });
       setTitle('');
       await onAdd();
-    } catch {
-      setError('We couldn’t add that task. Please try again.');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'We couldn’t add that task. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

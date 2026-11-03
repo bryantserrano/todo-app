@@ -1,5 +1,17 @@
 # React + TypeScript + Vite
 
+## Supabase setup
+
+Copy `.env.example` to `.env.local` and set `VITE_SUPABASE_URL` and
+`VITE_SUPABASE_PUBLISHABLE_KEY` from the Supabase project's Connect panel. Never
+use the service-role or secret key in this client app. Restart Vite after changing
+the environment file.
+
+The web app uses Supabase Auth and the `public.tasks` table. The table must have
+`user_id` as a UUID referencing `auth.users.id`, and Row Level Security policies
+that restrict each operation to `user_id = auth.uid()`. Existing tasks in browser
+localStorage are offered for import after sign-in.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
