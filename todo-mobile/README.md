@@ -25,6 +25,15 @@ npm install
 npm start
 ```
 
+### Supabase sign-in setup
+
+Copy `.env.example` to `.env` and set `EXPO_PUBLIC_SUPABASE_URL` and
+`EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` from the Supabase project's Connect panel.
+These are client keys; never put a Supabase secret or service-role key in this app.
+Restart Expo after changing environment variables. Email/password sign-up and sign-in
+are enabled in the app. If email confirmation is enabled in Supabase Auth, confirm
+the signup email before signing in.
+
 ### Running on Different Platforms
 
 ```bash

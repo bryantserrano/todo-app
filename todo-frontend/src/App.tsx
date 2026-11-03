@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import TodoForm from './components/TodoForm';
 import TodoList from './components/TodoList';
-import { deleteTodo, getTodos, updateTodo } from './services/api';
+import { deleteTodo, getLocalTodos, getTodos, importLocalTodos, updateTodo } from './services/api';
 import type { Todo } from './types/todo';
+import AuthPanel from './components/AuthPanel';
+import { isSupabaseConfigured, supabase } from './services/supabase';
+import type { Session } from '@supabase/supabase-js';
 
 type TodoFilter = 'all' | 'active' | 'completed';
 type Theme = 'light' | 'dark';
@@ -28,6 +31,8 @@ function getInitialThemePreference(): ThemePreference {
 }
 
 function App() {
+  const [session, setSession] = useState<Session | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [themePreference, setThemePreference] = useState<ThemePreference>(getInitialThemePreference);
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,6 +40,8 @@ function App() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [pendingTodoIds, setPendingTodoIds] = useState<string[]>([]);
   const [filter, setFilter] = useState<TodoFilter>('all');
+  const [localTodos, setLocalTodos] = useState<Todo[]>([]);
+  const [isImporting, setIsImporting] = useState(false);
 
   const loadTodos = useCallback(async () => {
     setIsLoading(true);
@@ -43,8 +50,8 @@ function App() {
     try {
       const data = await getTodos();
       setTodos(data);
-    } catch {
-      setLoadError('We couldn’t load your tasks. Check your connection and try again.');
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : 'We couldn’t load your tasks. Check your connection and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -61,10 +68,24 @@ function App() {
         completed: !todo.completed,
       });
       await loadTodos();
-    } catch {
-      setActionError(`Couldn’t update “${todo.title}”. Please try again.`);
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : `Couldn’t update “${todo.title}”. Please try again.`);
     } finally {
       setPendingTodoIds(current => current.filter(id => id !== todo._id));
+    }
+  };
+
+  const importBrowserTasks = async () => {
+    setIsImporting(true);
+    setActionError(null);
+    try {
+      await importLocalTodos();
+      setLocalTodos([]);
+      await loadTodos();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'Could not import browser tasks. Please try again.');
+    } finally {
+      setIsImporting(false);
     }
   };
 
@@ -75,8 +96,8 @@ function App() {
     try {
       await deleteTodo(todo._id);
       await loadTodos();
-    } catch {
-      setActionError(`Couldn’t delete “${todo.title}”. Please try again.`);
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : `Couldn’t delete “${todo.title}”. Please try again.`);
     } finally {
       setPendingTodoIds(current => current.filter(id => id !== todo._id));
     }
@@ -95,8 +116,26 @@ function App() {
   };
 
   useEffect(() => {
+    if (!supabase) {
+      setAuthLoading(false);
+      return;
+    }
+    void supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setAuthLoading(false);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+      setAuthLoading(false);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!session) return;
+    setLocalTodos(getLocalTodos());
     void loadTodos();
-  }, [loadTodos]);
+  }, [loadTodos, session]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = themePreference.theme;
@@ -130,6 +169,9 @@ function App() {
         : 'Nothing to show here.';
   const currentThemeLabel = themePreference.theme === 'dark' ? 'Dark mode' : 'Light mode';
 
+  if (authLoading) return <main className="auth-backdrop"><p role="status">Loading your account…</p></main>;
+  if (!isSupabaseConfigured || !session) return <AuthPanel />;
+
   return (
     <div className="app-backdrop">
       <div className="ambient-glow" aria-hidden="true" />
@@ -152,6 +194,7 @@ function App() {
               </span>
               {currentThemeLabel}
             </button>
+            <button className="auth-signout" type="button" onClick={() => void supabase?.auth.signOut()}>Sign out</button>
           </div>
           <h1>One thing at a <span>time.</span></h1>
           <p className="page-intro">A calmer place to gather your tasks and make steady progress.</p>
@@ -170,6 +213,14 @@ function App() {
           </div>
 
           <TodoForm onAdd={loadTodos} />
+          {localTodos.length > 0 && (
+            <div className="local-import" role="status">
+              <p>{localTodos.length} task{localTodos.length === 1 ? '' : 's'} are still saved only in this browser.</p>
+              <button type="button" className="retry-button" disabled={isImporting} onClick={() => void importBrowserTasks()}>
+                {isImporting ? 'Importing…' : 'Import to your account'}
+              </button>
+            </div>
+          )}
           {actionError && <p className="action-error" role="alert">{actionError}</p>}
 
           {loadError && (

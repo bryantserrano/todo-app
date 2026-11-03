@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
 import { getTodos, deleteTodo, updateTodo } from '@/api';
 import type { Todo } from '@/types';
+import { supabase } from '@/supabase';
 
 export default function TodoListScreen() {
   const insets = useSafeAreaInsets();
@@ -50,6 +51,9 @@ export default function TodoListScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <Animated.View entering={FadeIn} style={styles.header}>
         <Text style={styles.title}>Todo</Text>
+        <Pressable onPress={() => void supabase?.auth.signOut()} accessibilityRole="button">
+          <Text style={styles.signOut}>Sign out</Text>
+        </Pressable>
         <Pressable
           style={({ pressed }) => [
             styles.addButton,
@@ -136,6 +140,12 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: '700',
     color: '#fff',
+  },
+  signOut: {
+    color: '#9bbba5',
+    fontSize: 13,
+    fontWeight: '600',
+    padding: 10,
   },
   addButton: {
     width: 44,
