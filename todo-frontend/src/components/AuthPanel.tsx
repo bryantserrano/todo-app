@@ -15,7 +15,7 @@ export default function AuthPanel() {
     setMessage('');
 
     const result = isSignUp
-      ? await supabase.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: window.location.origin } })
+      ? await supabase.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: window.location.href } })
       : await supabase.auth.signInWithPassword({ email: email.trim(), password });
 
     setIsSubmitting(false);
