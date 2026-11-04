@@ -228,8 +228,9 @@ function App() {
 
   if (authLoading) return <main className="auth-backdrop"><p role="status">Loading your account…</p></main>;
   if (usesSupabase && (!isSupabaseConfigured || !session)) return <AuthPanel />;
-  if (usesSupabase && mfaStatus === 'checking') return <main className="auth-backdrop"><p role="status">Checking your MFA…</p></main>;
   if (usesSupabase && mfaStatus !== 'ready') {
+    if (mfaStatus === 'checking') return <main className="auth-backdrop"><p role="status">Checking your MFA…</p></main>;
+
     return (
       <MfaPanel
         mode={mfaStatus}
