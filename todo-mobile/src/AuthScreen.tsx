@@ -28,7 +28,7 @@ export default function AuthScreen() {
         <Text style={styles.title}>{isSignUp ? 'Create your account' : 'Welcome back'}</Text>
         <Text style={styles.subtitle}>Sign in to access your Todo account.</Text>
         {!isSupabaseConfigured ? (
-          <Text style={styles.message}>Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY to todo-mobile/.env, then restart Expo.</Text>
+          <Text style={styles.message}>Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY to todo-mobile/.env.local, then restart Expo.</Text>
         ) : (
           <>
             <Text style={styles.label}>Email</Text>

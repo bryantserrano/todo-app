@@ -6,7 +6,7 @@ A native iOS/Android todo application built with Expo Router, featuring:
 - **Modal Screens** - Beautiful modal presentation for creating todos
 - **Reanimated** - Smooth animations and transitions
 - **Haptics** - Tactile feedback for user interactions
-- **API Integration** - Connected to the FastAPI backend
+- **Supabase Integration** - Todos are stored in the Supabase `public.tasks` table
 
 ## Quick Start
 
@@ -27,12 +27,18 @@ npm start
 
 ### Supabase sign-in setup
 
-Copy `.env.example` to `.env` and set `EXPO_PUBLIC_SUPABASE_URL` and
+Copy `.env.example` to `.env.local` and set `EXPO_PUBLIC_SUPABASE_URL` and
 `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` from the Supabase project's Connect panel.
 These are client keys; never put a Supabase secret or service-role key in this app.
 Restart Expo after changing environment variables. Email/password sign-up and sign-in
 are enabled in the app. If email confirmation is enabled in Supabase Auth, confirm
 the signup email before signing in.
+
+After signing in, the app checks the session's MFA assurance level. Users without
+an authenticator factor are guided through TOTP setup; users with a verified
+factor must enter a current six-digit code before accessing todos. Enable TOTP
+enrollment and verification in Supabase Auth settings when the database's MFA
+policy is enabled.
 
 ### Running on Different Platforms
 
@@ -88,31 +94,25 @@ todo-mobile/
 - Haptic feedback on success/error
 - Keyboard handling
 
-## API Endpoints
+## Todo storage
 
-The app connects to `http://localhost:8000` and uses:
-- `GET /tasks` - Fetch all todos
-- `POST /tasks` - Create new todo
-- `PUT /tasks/{id}` - Update todo
-- `DELETE /tasks/{id}` - Delete todo
+The mobile app reads and writes todos through Supabase; it does not need the
+FastAPI backend or MongoDB running. The `public.tasks` table needs `id`,
+`created_at`, `user_id`, `title`, `description`, and `completed` columns, with
+Row Level Security policies that restrict each operation to
+`user_id = auth.uid()`.
 
 ## Development
 
-### Testing with Both Frontend & Backend
+### Testing with the web frontend
 
-**Terminal 1 - Backend:**
-```bash
-cd ../todo-backend
-uvicorn main:app --reload
-```
-
-**Terminal 2 - Web Frontend:**
+**Terminal 1 - Web Frontend:**
 ```bash
 cd ../todo-frontend
 npm run dev
 ```
 
-**Terminal 3 - Mobile:**
+**Terminal 2 - Mobile:**
 ```bash
 cd todo-mobile
 npm start
@@ -164,10 +164,10 @@ eas submit
 
 ## Troubleshooting
 
-### Can't connect to backend
-- Verify backend is running on `http://localhost:8000`
-- Check if you're on the same network (mobile device vs simulator)
-- Use your machine's IP instead of `localhost` for real devices
+### Can't load todos
+- Confirm `todo-mobile/.env.local` has the Supabase project URL and publishable key.
+- Confirm the `public.tasks` table exists and has owner-based Row Level Security policies.
+- Confirm you are signed in to the same Supabase project configured in the env file.
 
 ### Animations stuttering
 - Test on a release build: `eas build --platform ios --auto-submit=false`
