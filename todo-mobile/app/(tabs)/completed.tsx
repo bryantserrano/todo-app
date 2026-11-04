@@ -1,6 +1,7 @@
-import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useEffect, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
 import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
 import { getTodos, deleteTodo } from '@/api';
 import type { Todo } from '@/types';
@@ -9,27 +10,33 @@ export default function CompletedScreen() {
   const insets = useSafeAreaInsets();
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const hasLoaded = useRef(false);
 
-  const loadTodos = async () => {
+  const loadTodos = useCallback(async (forceRefresh = false) => {
+    const showRefresh = hasLoaded.current || forceRefresh;
+    if (showRefresh) setRefreshing(true);
+    else setLoading(true);
     try {
-      setLoading(true);
       const data = await getTodos();
       setTodos(data.filter(t => t.completed));
     } catch (error) {
       console.error('Failed to load todos:', error);
     } finally {
+      hasLoaded.current = true;
       setLoading(false);
+      setRefreshing(false);
     }
-  };
-
-  useEffect(() => {
-    loadTodos();
   }, []);
+
+  useFocusEffect(useCallback(() => {
+    void loadTodos();
+  }, [loadTodos]));
 
   const handleDelete = async (id: string) => {
     try {
       await deleteTodo(id);
-      setTodos(todos.filter(t => t._id !== id));
+      setTodos(current => current.filter(t => t._id !== id));
     } catch (error) {
       console.error('Failed to delete todo:', error);
     }
@@ -45,16 +52,26 @@ export default function CompletedScreen() {
         <View style={styles.centerContent}>
           <ActivityIndicator size="large" color="#3b82f6" />
         </View>
-      ) : todos.length === 0 ? (
-        <Animated.View
-          entering={FadeIn}
-          style={styles.centerContent}
-        >
-          <Text style={styles.emptyText}>No completed todos</Text>
-        </Animated.View>
       ) : (
-        <ScrollView style={styles.list}>
-          {todos.map((todo) => (
+        <ScrollView
+          style={styles.list}
+          contentContainerStyle={todos.length === 0 ? styles.emptyListContent : undefined}
+          refreshControl={(
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => void loadTodos(true)}
+              tintColor="#3b82f6"
+              colors={["#3b82f6"]}
+              progressBackgroundColor="#2a2a2a"
+            />
+          )}
+        >
+          {todos.length === 0 ? (
+            <Animated.View entering={FadeIn} style={styles.centerContent}>
+              <Text style={styles.emptyText}>No completed todos</Text>
+              <Text style={styles.emptySubtext}>Pull down to refresh</Text>
+            </Animated.View>
+          ) : todos.map((todo) => (
             <Animated.View
               key={todo._id}
               entering={FadeIn}
@@ -119,9 +136,17 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#ccc',
   },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#888',
+    marginTop: 8,
+  },
   list: {
     flex: 1,
     paddingHorizontal: 12,
+  },
+  emptyListContent: {
+    flexGrow: 1,
   },
   todoItem: {
     flexDirection: 'row',

@@ -16,8 +16,8 @@ requests to FastAPI, which reads and writes MongoDB. The GitHub Pages workflow
 sets `VITE_TODO_DATA_SOURCE=supabase`, so the staged web app uses Supabase Auth
 and the `public.tasks` table directly. Vite embeds this setting at build time.
 
-The mobile app currently uses the FastAPI API. Its Supabase integration is not
-part of the staged web setup.
+The mobile app uses Supabase Auth and the same Supabase `public.tasks` table as
+the staged web app. It does not need FastAPI or MongoDB running.
 
 ## Local development with Docker
 
@@ -150,13 +150,56 @@ before they can validate the current web data flows.
 
 ## Mobile app
 
-The Expo app is in `todo-mobile`. Install its dependencies and start Expo with:
+The Expo app is in `todo-mobile` and uses Expo SDK 58. It reads and writes todos
+through Supabase, so FastAPI and MongoDB are not needed to run the mobile app.
+
+### Prerequisites
+
+- Node.js 22.13 or newer
+- Expo Go installed on your iPhone
+- A Supabase project with the `public.tasks` table and owner-based Row Level
+  Security (RLS) policies
+
+### Configure Supabase
+
+Create `todo-mobile/.env.local` from `todo-mobile/.env.example` and set the URL
+and publishable key from the Supabase project's **Connect** panel:
+
+```env
+EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+```
+
+The `public.tasks` table needs `id`, `created_at`, `user_id`, `title`,
+`description`, and `completed` columns. Enable RLS and policies that restrict
+each user's operations to rows where `user_id = auth.uid()`. Never put a
+Supabase secret or service-role key in this mobile app.
+
+The app requires TOTP MFA: users enroll an authenticator on first sign-in and
+enter a code on later sign-ins. In Supabase **Authentication → Multi-Factor
+Authentication**, enable TOTP enrollment and verification. To enforce the same
+requirement at the database level, run
+[`todo-frontend/supabase/require-aal2.sql`](todo-frontend/supabase/require-aal2.sql)
+in the Supabase SQL Editor.
+
+If email confirmation is enabled in Supabase Auth, confirm the signup email
+before signing in.
+
+### Start the app
+
+In a terminal, from the repository root:
 
 ```bash
 cd todo-mobile
 npm install
+npx expo login
 npm start
 ```
 
-The mobile app currently calls FastAPI. A physical device must use your
-computer's LAN IP address instead of `localhost` for the API URL.
+`npx expo login` opens a browser so you can sign in to the Expo account used by
+Expo Go. On a physical iPhone, Expo Go and the Expo CLI must be signed in to the
+same account. Then scan the QR code with the iPhone Camera app and open it in
+Expo Go. Keep the iPhone and computer on the same Wi-Fi network.
+
+After changing `.env.local`, restart the Expo server so it picks up the new
+Supabase settings.
