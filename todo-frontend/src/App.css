@@ -39,6 +39,12 @@
 .auth-switch, .auth-signout { padding: 8px 10px; border: 0; background: transparent; color: var(--color-accent); cursor: pointer; font-size: 12px; font-weight: 650; }
 .auth-switch { justify-self: center; }
 .auth-signout { margin-left: 8px; }
+.mfa-primary { width: 100%; margin-top: 14px; }
+.mfa-setup { display: grid; justify-items: center; gap: 8px; margin: 18px 0; }
+.mfa-setup .auth-copy { margin: 4px 0; text-align: center; }
+.mfa-qr { width: 210px; height: 210px; padding: 10px; border-radius: 12px; background: #fff; }
+.mfa-secret { display: block; max-width: 100%; overflow-wrap: anywhere; padding: 10px 12px; border-radius: 8px; background: var(--color-input); color: var(--color-ink); font-size: 13px; letter-spacing: 0.06em; }
+.mfa-panel .auth-form { margin-top: 16px; }
 
 .ambient-glow {
   position: absolute;

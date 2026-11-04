@@ -4,12 +4,14 @@ import TodoList from './components/TodoList';
 import { deleteTodo, getLocalTodos, getTodos, importLocalTodos, updateTodo } from './services/api';
 import type { Todo } from './types/todo';
 import AuthPanel from './components/AuthPanel';
+import MfaPanel from './components/MfaPanel';
 import { isSupabaseConfigured, supabase } from './services/supabase';
 import type { Session } from '@supabase/supabase-js';
 
 type TodoFilter = 'all' | 'active' | 'completed';
 type Theme = 'light' | 'dark';
 type ThemePreference = { theme: Theme; isExplicit: boolean };
+type MfaStatus = 'checking' | 'enroll' | 'challenge' | 'ready' | 'error';
 
 const THEME_STORAGE_KEY = 'todo-app-theme';
 
@@ -33,6 +35,10 @@ function getInitialThemePreference(): ThemePreference {
 function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [mfaStatus, setMfaStatus] = useState<MfaStatus>('checking');
+  const [mfaFactorId, setMfaFactorId] = useState<string>();
+  const [mfaError, setMfaError] = useState('');
+  const [mfaRetry, setMfaRetry] = useState(0);
   const [themePreference, setThemePreference] = useState<ThemePreference>(getInitialThemePreference);
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -132,10 +138,48 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (!session) return;
+    if (!session || !supabase) {
+      setMfaStatus('checking');
+      setMfaFactorId(undefined);
+      return;
+    }
+    let isCurrent = true;
+    setMfaStatus('checking');
+    void Promise.all([
+      supabase.auth.mfa.listFactors(),
+      supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
+    ]).then(([factorResult, assuranceResult]) => {
+      if (!isCurrent) return;
+      if (factorResult.error) throw factorResult.error;
+      if (assuranceResult.error) throw assuranceResult.error;
+
+      if (assuranceResult.data.currentLevel === 'aal2') {
+        setMfaStatus('ready');
+        setMfaFactorId(undefined);
+        return;
+      }
+
+      const verifiedTotp = factorResult.data.totp.find(factor => factor.status === 'verified');
+      if (verifiedTotp) {
+        setMfaFactorId(verifiedTotp.id);
+        setMfaStatus('challenge');
+      } else {
+        setMfaFactorId(undefined);
+        setMfaStatus('enroll');
+      }
+    }).catch(error => {
+      if (!isCurrent) return;
+      setMfaError(error instanceof Error ? error.message : 'Could not check your MFA status.');
+      setMfaStatus('error');
+    });
+    return () => { isCurrent = false; };
+  }, [session, mfaRetry]);
+
+  useEffect(() => {
+    if (!session || mfaStatus !== 'ready') return;
     setLocalTodos(getLocalTodos());
     void loadTodos();
-  }, [loadTodos, session]);
+  }, [loadTodos, mfaStatus, session]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = themePreference.theme;
@@ -171,6 +215,18 @@ function App() {
 
   if (authLoading) return <main className="auth-backdrop"><p role="status">Loading your account…</p></main>;
   if (!isSupabaseConfigured || !session) return <AuthPanel />;
+  if (mfaStatus === 'checking') return <main className="auth-backdrop"><p role="status">Checking your MFA…</p></main>;
+  if (mfaStatus !== 'ready') {
+    return (
+      <MfaPanel
+        mode={mfaStatus}
+        factorId={mfaFactorId}
+        error={mfaError}
+        onVerified={() => { setMfaError(''); setMfaStatus('checking'); setMfaRetry(value => value + 1); }}
+        onRetry={() => { setMfaError(''); setMfaRetry(value => value + 1); }}
+      />
+    );
+  }
 
   return (
     <div className="app-backdrop">

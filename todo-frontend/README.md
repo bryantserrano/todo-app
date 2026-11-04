@@ -12,6 +12,14 @@ The web app uses Supabase Auth and the `public.tasks` table. The table must have
 that restrict each operation to `user_id = auth.uid()`. Existing tasks in browser
 localStorage are offered for import after sign-in.
 
+### Require authenticator MFA
+
+The web sign-in flow requires users to enroll a TOTP authenticator and enter a
+code on later sign-ins. Enable TOTP and verification in Supabase Auth's MFA
+settings. To require AAL2 at the database as well, run
+`supabase/require-aal2.sql` once in the Supabase SQL Editor. It adds a restrictive
+policy alongside the existing owner policy.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
