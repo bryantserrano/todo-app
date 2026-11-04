@@ -41,6 +41,7 @@ jobs:
           npm run build
         working-directory: todo-frontend
         env:
+          VITE_TODO_DATA_SOURCE: supabase
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
 

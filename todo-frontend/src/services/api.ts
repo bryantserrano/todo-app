@@ -1,5 +1,6 @@
 import type { Todo, TodoInput } from '../types/todo';
-import { supabase } from './supabase';
+import axios from 'axios';
+import { supabase, usesLocalApi } from './supabase';
 
 type TaskRow = {
   id: number | string;
@@ -9,6 +10,17 @@ type TaskRow = {
 };
 
 const LOCAL_STORAGE_KEY = 'todo-app-tasks';
+const localApi = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+  timeout: 10000,
+});
+
+type ApiTodo = {
+  _id: string;
+  title: string;
+  description?: string | null;
+  completed: boolean;
+};
 
 function readLocalTodos(): Todo[] {
   try {
@@ -42,6 +54,11 @@ function toTodo(row: TaskRow): Todo {
 }
 
 export async function getTodos(): Promise<Todo[]> {
+  if (usesLocalApi) {
+    const { data } = await localApi.get<ApiTodo[]>('/tasks');
+    return data.map(todo => ({ ...todo, description: todo.description ?? undefined }));
+  }
+
   const { data, error } = await client()
     .from('tasks')
     .select('id, title, description, completed')
@@ -52,6 +69,11 @@ export async function getTodos(): Promise<Todo[]> {
 }
 
 export async function addTodo(todo: TodoInput): Promise<{ id: string }> {
+  if (usesLocalApi) {
+    const { data } = await localApi.post<{ id: string }>('/tasks', todo);
+    return data;
+  }
+
   const db = client();
   const { data: { user }, error: userError } = await db.auth.getUser();
   if (userError) throw userError;
@@ -73,6 +95,11 @@ export async function addTodo(todo: TodoInput): Promise<{ id: string }> {
 }
 
 export async function updateTodo(id: string, todo: TodoInput): Promise<void> {
+  if (usesLocalApi) {
+    await localApi.put(`/tasks/${encodeURIComponent(id)}`, todo);
+    return;
+  }
+
   const { data, error } = await client()
     .from('tasks')
     .update({
@@ -89,6 +116,11 @@ export async function updateTodo(id: string, todo: TodoInput): Promise<void> {
 }
 
 export async function deleteTodo(id: string): Promise<void> {
+  if (usesLocalApi) {
+    await localApi.delete(`/tasks/${encodeURIComponent(id)}`);
+    return;
+  }
+
   const { data, error } = await client()
     .from('tasks')
     .delete()
@@ -101,10 +133,12 @@ export async function deleteTodo(id: string): Promise<void> {
 }
 
 export function getLocalTodos(): Todo[] {
+  if (usesLocalApi) return [];
   return readLocalTodos();
 }
 
 export async function importLocalTodos(): Promise<number> {
+  if (usesLocalApi) return 0;
   const todos = readLocalTodos();
   if (todos.length === 0) return 0;
 
