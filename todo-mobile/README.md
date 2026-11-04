@@ -8,6 +8,10 @@ A native iOS/Android todo application built with Expo Router, featuring:
 - **Haptics** - Tactile feedback for user interactions
 - **Supabase Integration** - Todos are stored in the Supabase `public.tasks` table
 
+## Demo
+
+[Watch the mobile app demo (MP4)](docs/media/todo-mobile-demo.mp4)
+
 ## Quick Start
 
 ### Prerequisites
