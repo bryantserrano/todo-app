@@ -5,7 +5,7 @@ import { deleteTodo, getLocalTodos, getTodos, importLocalTodos, updateTodo } fro
 import type { Todo } from './types/todo';
 import AuthPanel from './components/AuthPanel';
 import MfaPanel from './components/MfaPanel';
-import { isSupabaseConfigured, supabase } from './services/supabase';
+import { isSupabaseConfigured, supabase, usesLocalApi, usesSupabase } from './services/supabase';
 import type { Session } from '@supabase/supabase-js';
 
 type TodoFilter = 'all' | 'active' | 'completed';
@@ -122,6 +122,11 @@ function App() {
   };
 
   useEffect(() => {
+    if (usesLocalApi) {
+      setAuthLoading(false);
+      setMfaStatus('ready');
+      return;
+    }
     if (!supabase) {
       setAuthLoading(false);
       return;
@@ -138,6 +143,10 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (usesLocalApi) {
+      setMfaStatus('ready');
+      return;
+    }
     if (!session || !supabase) {
       setMfaStatus('checking');
       setMfaFactorId(undefined);
@@ -176,6 +185,10 @@ function App() {
   }, [session, mfaRetry]);
 
   useEffect(() => {
+    if (usesLocalApi) {
+      void loadTodos();
+      return;
+    }
     if (!session || mfaStatus !== 'ready') return;
     setLocalTodos(getLocalTodos());
     void loadTodos();
@@ -214,9 +227,9 @@ function App() {
   const currentThemeLabel = themePreference.theme === 'dark' ? 'Dark mode' : 'Light mode';
 
   if (authLoading) return <main className="auth-backdrop"><p role="status">Loading your account…</p></main>;
-  if (!isSupabaseConfigured || !session) return <AuthPanel />;
-  if (mfaStatus === 'checking') return <main className="auth-backdrop"><p role="status">Checking your MFA…</p></main>;
-  if (mfaStatus !== 'ready') {
+  if (usesSupabase && (!isSupabaseConfigured || !session)) return <AuthPanel />;
+  if (usesSupabase && mfaStatus === 'checking') return <main className="auth-backdrop"><p role="status">Checking your MFA…</p></main>;
+  if (usesSupabase && mfaStatus !== 'ready') {
     return (
       <MfaPanel
         mode={mfaStatus}
@@ -250,7 +263,7 @@ function App() {
               </span>
               {currentThemeLabel}
             </button>
-            <button className="auth-signout" type="button" onClick={() => void supabase?.auth.signOut()}>Sign out</button>
+            {usesSupabase && <button className="auth-signout" type="button" onClick={() => void supabase?.auth.signOut()}>Sign out</button>}
           </div>
           <h1>One thing at a <span>time.</span></h1>
           <p className="page-intro">A calmer place to gather your tasks and make steady progress.</p>
@@ -269,7 +282,7 @@ function App() {
           </div>
 
           <TodoForm onAdd={loadTodos} />
-          {localTodos.length > 0 && (
+          {usesSupabase && localTodos.length > 0 && (
             <div className="local-import" role="status">
               <p>{localTodos.length} task{localTodos.length === 1 ? '' : 's'} are still saved only in this browser.</p>
               <button type="button" className="retry-button" disabled={isImporting} onClick={() => void importBrowserTasks()}>

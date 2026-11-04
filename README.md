@@ -1,227 +1,162 @@
-## Overview
+# Todo App
 
-This project is a Todo application with a **FastAPI** backend, a **React + Vite** web frontend, and an **Expo / React Native** mobile app. The backend connects to **MongoDB** for data storage.
+A Todo app with two web data modes: a local Docker stack for development and a
+Supabase-backed web app for staging. The repository also includes a FastAPI
+backend, MongoDB, a React + Vite frontend, and an Expo mobile app.
 
-## Backend
+## How the two web modes work
 
-The backend is responsible for handling the API requests and interacting with the MongoDB database.
+| Mode | Web data source | Authentication | Where data lives |
+| --- | --- | --- | --- |
+| Local development | FastAPI JSON API | None; local development only | MongoDB in the Docker volume |
+| Staging | Supabase client API | Supabase email/password and TOTP MFA | Supabase Postgres, with per-user RLS |
 
-### Setup
+Docker Compose sets `VITE_TODO_DATA_SOURCE=api`, so the local web app sends JSON
+requests to FastAPI, which reads and writes MongoDB. The GitHub Pages workflow
+sets `VITE_TODO_DATA_SOURCE=supabase`, so the staged web app uses Supabase Auth
+and the `public.tasks` table directly. Vite embeds this setting at build time.
 
-1. Create a `.env` file in the repository root (the same directory as this README).
-2. Add the following environment variables to your `.env` file:
+The mobile app currently uses the FastAPI API. Its Supabase integration is not
+part of the staged web setup.
 
-   ```bash
-   MONGO_URI=your_mongodb_connection_string
-   ENVIRONMENT=development  # Options: development, production, testing; controls log level
-   ```
+## Local development with Docker
 
-For example:
+Install Docker Desktop (or Docker Engine with the Compose plugin), then run from
+the repository root:
 
 ```bash
+docker compose up --build --detach
+```
+
+Open the local web app at [http://localhost:5173](http://localhost:5173), the
+FastAPI health check at [http://localhost:8000/](http://localhost:8000/), and
+the interactive API docs at [http://localhost:8000/docs](http://localhost:8000/docs).
+The API returns task data as JSON. MongoDB is reachable from the host at
+`mongodb://localhost:27017` and from the backend container at
+`mongodb://mongodb:27017`.
+
+Useful Compose commands:
+
+```bash
+docker compose logs --follow          # View all service logs
+docker compose logs --follow backend  # View FastAPI logs
+docker compose down                   # Stop services; keep MongoDB data
+docker compose down --volumes         # Stop services and delete MongoDB data
+```
+
+MongoDB data persists in the `mongodb-data` Docker volume across restarts. The
+last command permanently deletes that local database volume.
+
+### Run the web frontend outside Docker
+
+The frontend defaults to Supabase mode when run directly with Vite. To use the
+local FastAPI API instead, set these in `todo-frontend/.env.local`:
+
+```env
+VITE_TODO_DATA_SOURCE=api
+VITE_API_URL=http://localhost:8000
+```
+
+Then start MongoDB and FastAPI using Compose, or start them separately as
+described below. The Docker Compose frontend receives these API settings
+automatically.
+
+### Run MongoDB and FastAPI separately
+
+You can use Compose for the database and run FastAPI on your host, or run a
+MongoDB container manually:
+
+```bash
+docker run -d -p 27017:27017 --name mongodb mongo:8
+```
+
+Create `todo-app/.env` with a MongoDB URL appropriate to where FastAPI runs:
+
+```env
 MONGO_URI=mongodb://localhost:27017
 ENVIRONMENT=development
 ```
 
-### MongoDB Setup & Verification
-
-#### Run the full development stack with Docker Compose (Recommended)
-
-Docker Compose starts MongoDB, the FastAPI backend, and the Vite frontend
-together. Install Docker Desktop (or Docker Engine with the Compose plugin),
-then run these commands from the repository root:
+From `todo-backend`, install dependencies and start the API:
 
 ```bash
-docker compose up --build --detach
-```
-
-Detached mode keeps the service output out of your terminal. To view logs later,
-run `docker compose logs --follow`; use `docker compose logs --follow backend`
-to follow only the backend. Stop the stack with `docker compose down`.
-
-Open the frontend at `http://localhost:5173`, the backend health endpoint at
-`http://localhost:8000/`, and the API docs at `http://localhost:8000/docs`.
-The backend connects to MongoDB through the Compose network at
-`mongodb://mongodb:27017`; from your host machine, MongoDB is available at
-`mongodb://localhost:27017`.
-
-The backend and frontend source directories are mounted into their containers,
-so code changes reload during development. MongoDB data is kept in the named
-`mongodb-data` volume across restarts. To also delete the database volume and
-its data, run `docker compose down --volumes`.
-
-The web frontend currently stores todos in browser local storage and does not
-call the FastAPI API. Compose runs the backend and database so they are ready
-for API development, but existing web app tasks remain browser-local.
-
-```mermaid
-flowchart LR
-  browser[Your browser] -->|localhost:5173| frontend[Frontend\nReact + Vite]
-  browser -->|localhost:8000| backend[Backend\nFastAPI]
-
-  subgraph compose[Docker Compose network]
-    frontend
-    backend -->|mongodb:27017| mongodb[(MongoDB)]
-  end
-
-  backend -. port 8000 .-> browser
-  frontend -. port 5173 .-> browser
-  mongodb -. port 27017 .-> host[Your machine]
-  mongodb --- volume[(mongodb-data volume)]
-```
-
-The browser uses the frontend for the app and can reach the backend directly
-for API development. The backend reaches MongoDB by the Compose service name
-`mongodb`; MongoDB data lives in the `mongodb-data` volume.
-
-If you already started MongoDB with the standalone `docker run` command below,
-stop that container before starting Compose because both use port `27017`:
-
-```bash
-docker stop mongodb
-```
-
-Before running the backend, ensure MongoDB is running. Here are the recommended ways:
-
-#### Option 1: Docker (Recommended)
-```bash
-# Start MongoDB container
-docker run -d -p 27017:27017 --name mongodb mongo:latest
-
-# Verify it's running
-docker ps | grep mongodb
-```
-
-#### Option 2: Homebrew (macOS)
-```bash
-# Install MongoDB
-brew tap mongodb/brew
-brew install mongodb-community
-
-# Start the service
-brew services start mongodb-community
-
-# Verify it's running
-brew services list | grep mongodb
-```
-
-#### Verify MongoDB Connection
-```bash
-# Check if port 27017 is listening
-lsof -i :27017
-
-# Or try to connect with mongosh (if installed)
-mongosh mongodb://localhost:27017
-```
-
-#### Stop MongoDB
-```bash
-# If using Docker
-docker stop mongodb
-
-# If using Homebrew
-brew services stop mongodb-community
-```
-
-### Running the Backend in Development
-
-Install `uv` if needed:
-
-```shell
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-From the repository root, create a virtual environment and install the backend dependencies:
-
-```bash
-cd todo-backend
 uv venv
 uv pip install --python .venv/bin/python -r requirements.txt
-```
-
-To start the **FastAPI** backend with auto-reload (recommended for development), run the following command from the backend directory:
-
-```bash
 .venv/bin/python -m uvicorn main:app --reload
 ```
 
-The API will be available at `http://localhost:8000`. Visit `http://localhost:8000/` for the health check.
+When FastAPI runs inside Compose, it uses the hostname `mongodb`; when it runs
+directly on your machine, use `localhost`.
 
-### Running the Frontend in Development
+## Staging web app with Supabase
 
-Use a supported Node.js LTS release. From the repository root, install the web frontend dependencies:
+The staged site is hosted at
+[https://bryantserrano.github.io/todo-app/](https://bryantserrano.github.io/todo-app/).
+It uses Supabase Auth and Postgres; it does not need the FastAPI or MongoDB
+services running.
 
-```bash
-cd todo-frontend
-npm install
-```
+### Supabase project setup
 
-Then run the UI:
+The `public.tasks` table needs `id`, `created_at`, `user_id`, `title`,
+`description`, and `completed` columns. Set `user_id` to UUID referencing
+`auth.users.id`, and enable Row Level Security with owner policies that compare
+`user_id` to `auth.uid()`.
 
-```bash
-npm run dev
-```
+The web app requires each signed-in user to enroll a TOTP authenticator and
+verify a code on later sign-ins. In Supabase **Authentication → Multi-Factor
+Authentication**, set TOTP to **Enabled**. **Verify Enabled** allows verification
+but disables new factor enrollment. To enforce MFA at the database as well, run
+[`todo-frontend/supabase/require-aal2.sql`](todo-frontend/supabase/require-aal2.sql)
+once in the Supabase SQL Editor. TOTP MFA is free to use.
 
-Open the URL printed by Vite, usually `http://localhost:5173/`.
+### GitHub Pages configuration
 
-### Running the web and API smoke tests
+The deployment workflow builds the web app whenever changes reach `main`. Add
+these repository variables in GitHub under **Settings → Secrets and variables →
+Actions → Variables**:
 
-The Playwright suite checks the browser task flow (add, complete, filter,
-delete, and persistence after reload) and the FastAPI health and task CRUD
-endpoints. The web app currently saves tasks in browser local storage, so the
-UI checks and API checks exercise separate storage paths.
+| Variable | Value |
+| --- | --- |
+| `VITE_SUPABASE_URL` | Supabase project URL |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Publishable key for that same project |
 
-Start the full stack first so MongoDB and the API are available:
+The publishable key is meant for browser code. Do not use a Supabase secret or
+`service_role` key in the frontend or GitHub Pages build.
 
-```bash
-docker compose up --build --detach
-```
+In Supabase **Authentication → URL Configuration**, set the Site URL to the
+GitHub Pages URL and add that URL plus `http://localhost:5173/` to Redirect URLs.
+After setting the GitHub variables, push the workflow changes to `main` or run
+the **Deploy static site to GitHub Pages** workflow manually.
 
-Then install the frontend dependencies and run the checks:
+For local Vite development against Supabase instead of the Docker API, copy
+`todo-frontend/.env.example` to `todo-frontend/.env.local` and fill in the
+Supabase URL and publishable key. Set `VITE_TODO_DATA_SOURCE=supabase`.
 
-```bash
-cd todo-frontend
-npm install
-npx playwright install chromium  # First time only
-npm run test:e2e
-```
+## API endpoints
 
-The API checks create uniquely named test data and delete it when finished.
-Override the default service URLs with `PLAYWRIGHT_BASE_URL` and
-`PLAYWRIGHT_API_URL` when needed. Use `npm run test:e2e:ui` to run Playwright
-in interactive mode.
+- `GET /` — backend health check
+- `GET /tasks` — list tasks
+- `POST /tasks` — create a task
+- `GET /tasks/{task_id}` — fetch one task
+- `PUT /tasks/{task_id}` — update a task
+- `DELETE /tasks/{task_id}` — delete a task
 
-### Hosting the standalone web app on GitHub Pages
+## Tests
 
-**Live site:** [https://bryantserrano.github.io/todo-app/](https://bryantserrano.github.io/todo-app/)
+The FastAPI endpoint tests are in `todo-backend/test_api.py`. The Playwright API
+checks are in `todo-frontend/tests/api.spec.ts`. The Playwright UI tests still
+expect browser-local task storage and need updating for the API/Supabase modes
+before they can validate the current web data flows.
 
-The web frontend stores tasks and the selected theme in the browser's local
-storage, so the static site does not need the FastAPI backend or MongoDB. Data
-is local to each browser and device; it does not sync between them.
+## Mobile app
 
-The `Deploy static site to GitHub Pages` workflow builds the frontend and
-deploys it whenever changes are pushed to `main`. To enable it:
-
-1. Push the repository to GitHub and open **Settings → Pages**.
-2. Under **Build and deployment**, set the source to **GitHub Actions**.
-3. Push to `main` (or run the workflow manually from the **Actions** tab).
-
-After the workflow succeeds, GitHub shows the published site URL in the Pages
-settings and in the workflow deployment environment.
-
-### Running the Mobile App in Development
-
-Install dependencies from the repository root:
+The Expo app is in `todo-mobile`. Install its dependencies and start Expo with:
 
 ```bash
 cd todo-mobile
 npm install
+npm start
 ```
 
-Start Expo:
-
-```bash
-npm run start
-```
-
-Use the Expo CLI prompts to open the app in an available simulator or on a device with Expo Go. You can also run `npm run ios`, `npm run android`, or `npm run web` when the corresponding platform is available.
+The mobile app currently calls FastAPI. A physical device must use your
+computer's LAN IP address instead of `localhost` for the API URL.

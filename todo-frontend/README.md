@@ -1,5 +1,20 @@
 # React + TypeScript + Vite
 
+## Data source modes
+
+The web client selects its task backend with `VITE_TODO_DATA_SOURCE`:
+
+- `api` calls the FastAPI JSON API. Docker Compose sets this for local development.
+- `supabase` uses Supabase Auth and the `public.tasks` table. This is the staging
+  mode used by GitHub Pages and the default when running Vite directly.
+
+To point a local Vite server at the Docker backend, set these in `.env.local`:
+
+```env
+VITE_TODO_DATA_SOURCE=api
+VITE_API_URL=http://localhost:8000
+```
+
 ## Supabase setup
 
 Copy `.env.example` to `.env.local` and set `VITE_SUPABASE_URL` and
@@ -7,7 +22,7 @@ Copy `.env.example` to `.env.local` and set `VITE_SUPABASE_URL` and
 use the service-role or secret key in this client app. Restart Vite after changing
 the environment file.
 
-The web app uses Supabase Auth and the `public.tasks` table. The table must have
+In `supabase` mode, the web app uses Supabase Auth and the `public.tasks` table. The table must have
 `user_id` as a UUID referencing `auth.users.id`, and Row Level Security policies
 that restrict each operation to `user_id = auth.uid()`. Existing tasks in browser
 localStorage are offered for import after sign-in.
